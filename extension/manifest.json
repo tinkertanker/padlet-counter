@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Padlet Counter",
+  "version": "0.1.0",
+  "description": "Displays row and column counts on Padlet boards",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://padlet.com/*",
+        "https://*.padlet.com/*"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Padlet Counter"
+  }
+}

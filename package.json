@@ -1,0 +1,11 @@
+{
+  "name": "padlet-counter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome extension and bookmarklet scaffold for counting Padlet rows and columns",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "clean": "trash dist"
+  }
+}
