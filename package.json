@@ -1,0 +1,13 @@
+{
+  "name": "padlet-section-counter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-bookmarklet.mjs",
+    "check": "node --check src/counter.js && node --check scripts/build-bookmarklet.mjs && node scripts/build-bookmarklet.mjs && node --test"
+  },
+  "devDependencies": {
+    "linkedom": "^0.18.13"
+  }
+}

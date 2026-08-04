@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Padlet Section Counter",
+  "version": "1.0.0",
+  "description": "Shows a live entry count on every section in Padlet's rows and columns layouts.",
+  "content_scripts": [
+    {
+      "matches": [
+        "*://padlet.com/*",
+        "*://*.padlet.com/*",
+        "*://padlet.org/*",
+        "*://*.padlet.org/*"
+      ],
+      "js": ["src/counter.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
