@@ -17,14 +17,13 @@ The extension also works in Chromium browsers such as Edge, Brave, and Arc via t
 ## Install the bookmarklet
 
 1. Open [padlet-counter.tk.sg](https://padlet-counter.tk.sg) in Chrome (or open [`install-bookmarklet.html`](install-bookmarklet.html) locally).
-2. Drag **Count Padlet entries** to the bookmarks bar.
-3. Open a Padlet using Rows or Columns and click the bookmark.
+2. Show the bookmarks bar if it is hidden, then drag **Count Padlet entries** onto it. If you already have that bookmark, delete it first and drag a fresh copy — an old bookmark will not pick up this update.
+3. Open a Padlet using Rows or Columns and click the bookmark once after the page loads.
+4. Click a section’s number to expand the colour breakdown (white, red, yellow, green, blue, purple). Click it again to collapse.
 
 If dragging is unavailable, create a bookmark manually, name it “Count Padlet entries,” and paste the contents of [`bookmarklet.txt`](bookmarklet.txt) into its URL field.
 
-Unlike the extension, the bookmarklet must be clicked once after each full page load. It continues updating while that page remains open. After updating this project, replace the bookmark with a fresh copy from the installer.
-
-Click a section's count to expand a segmented control of Padlet's post colours (white, red, yellow, green, blue, purple). Click it again to collapse back to the total.
+Unlike the extension, the bookmarklet must be clicked once after each full page load. It continues updating while that page remains open.
 
 ## Development
 
