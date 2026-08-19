@@ -207,32 +207,18 @@ test("keeps a colour breakdown open after posts are added", async () => {
   window.__padletSectionCounter.destroy();
 });
 
-test("Enter on a focused badge toggles the colour breakdown", () => {
+test("reads an exact colour class on the post", () => {
   const window = load(`
     <section data-testid="column"><header>Keys</header>
       <article data-testid="post" class="red"></article>
     </section>
   `);
   const badge = window.document.querySelector(".padlet-section-counter-badge");
-  const event = new window.Event("keydown", { bubbles: true, cancelable: true });
-  Object.defineProperty(event, "key", { value: "Enter" });
-  badge.dispatchEvent(event);
-  assert.equal(event.defaultPrevented, true);
-  assert.deepEqual(segments(window), [
-    { colour: "default", count: "0" },
-    { colour: "red", count: "1" },
-    { colour: "orange", count: "0" },
-    { colour: "green", count: "0" },
-    { colour: "blue", count: "0" },
-    { colour: "purple", count: "0" }
-  ]);
-  assert.match(badge.getAttribute("aria-label"), /1 red/i);
-
-  const tab = new window.Event("keydown", { bubbles: true, cancelable: true });
-  Object.defineProperty(tab, "key", { value: "Tab" });
-  badge.dispatchEvent(tab);
-  assert.equal(tab.defaultPrevented, false);
-  assert.equal(badge.getAttribute("aria-expanded"), "true");
+  click(window, badge);
+  assert.equal(
+    segments(window).find((segment) => segment.colour === "red")?.count,
+    "1"
+  );
   window.__padletSectionCounter.destroy();
 });
 

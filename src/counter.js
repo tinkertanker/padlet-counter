@@ -110,10 +110,6 @@
         vertical-align: middle !important;
         white-space: nowrap !important;
       }
-      .${BADGE_CLASS}:focus-visible {
-        outline: 2px solid #fff !important;
-        outline-offset: 2px !important;
-      }
       .${BADGE_CLASS}[aria-expanded="true"] {
         background: #fff !important;
         border: 1px solid rgba(17, 24, 39, .18) !important;
@@ -363,8 +359,6 @@
     if (!badge) {
       badge = document.createElement("span");
       badge.className = BADGE_CLASS;
-      badge.setAttribute("role", "button");
-      badge.setAttribute("tabindex", "0");
       target.append(badge);
     }
 
@@ -431,12 +425,9 @@
       event.stopPropagation();
     }
 
-    function onBadgeActivate(event) {
+    function onBadgeClick(event) {
       const badge = event.target?.closest?.(`.${BADGE_CLASS}`);
       if (!badge) return;
-      if (event.type === "keydown" && (event.repeat || (event.key !== "Enter" && event.key !== " "))) {
-        return;
-      }
       event.preventDefault();
       event.stopPropagation();
       toggleBadge(badge);
@@ -461,8 +452,7 @@
     });
     document.addEventListener("pointerdown", onBadgePointer, true);
     document.addEventListener("mousedown", onBadgePointer, true);
-    document.addEventListener("click", onBadgeActivate, true);
-    document.addEventListener("keydown", onBadgeActivate, true);
+    document.addEventListener("click", onBadgeClick, true);
     refresh();
 
     return {
@@ -472,8 +462,7 @@
         observer.disconnect();
         document.removeEventListener("pointerdown", onBadgePointer, true);
         document.removeEventListener("mousedown", onBadgePointer, true);
-        document.removeEventListener("click", onBadgeActivate, true);
-        document.removeEventListener("keydown", onBadgeActivate, true);
+        document.removeEventListener("click", onBadgeClick, true);
         document.querySelectorAll(`.${BADGE_CLASS}`).forEach((badge) => badge.remove());
         document.getElementById(STYLE_ID)?.remove();
         delete window[INSTANCE_KEY];
