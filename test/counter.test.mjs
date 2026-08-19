@@ -217,6 +217,7 @@ test("Enter on a focused badge toggles the colour breakdown", () => {
   const event = new window.Event("keydown", { bubbles: true, cancelable: true });
   Object.defineProperty(event, "key", { value: "Enter" });
   badge.dispatchEvent(event);
+  assert.equal(event.defaultPrevented, true);
   assert.deepEqual(segments(window), [
     { colour: "default", count: "0" },
     { colour: "red", count: "1" },
@@ -225,5 +226,28 @@ test("Enter on a focused badge toggles the colour breakdown", () => {
     { colour: "blue", count: "0" },
     { colour: "purple", count: "0" }
   ]);
+  assert.match(badge.getAttribute("aria-label"), /1 red/i);
+
+  const tab = new window.Event("keydown", { bubbles: true, cancelable: true });
+  Object.defineProperty(tab, "key", { value: "Tab" });
+  badge.dispatchEvent(tab);
+  assert.equal(tab.defaultPrevented, false);
+  assert.equal(badge.getAttribute("aria-expanded"), "true");
+  window.__padletSectionCounter.destroy();
+});
+
+test("explicit white wins over nested colour markup and dark surfaces stay default", () => {
+  const window = load(`
+    <section data-testid="column"><header>Paint</header>
+      <article data-testid="post" data-color="white"><span data-color="red"></span></article>
+      <article data-testid="post" style="background-color: #111827"></article>
+    </section>
+  `);
+  const badge = window.document.querySelector(".padlet-section-counter-badge");
+  click(window, badge);
+  assert.deepEqual(
+    Object.fromEntries(segments(window).map((segment) => [segment.colour, segment.count])),
+    { default: "2", red: "0", orange: "0", green: "0", blue: "0", purple: "0" }
+  );
   window.__padletSectionCounter.destroy();
 });
