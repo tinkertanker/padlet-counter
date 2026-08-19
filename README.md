@@ -1,6 +1,6 @@
 # Padlet Section Counter
 
-Adds a live entry count to every section header in Padlet's **Rows** and **Columns** layouts. Counts update automatically when posts are added, moved, or removed.
+Adds a live entry count to every section header in Padlet's **Rows** and **Columns** layouts. Counts update automatically when posts are added, moved, or removed. Click a count to expand it into a segmented breakdown of each post colour.
 
 No account access, API key, network request, or collected data is required.
 
@@ -22,7 +22,9 @@ The extension also works in Chromium browsers such as Edge, Brave, and Arc via t
 
 If dragging is unavailable, create a bookmark manually, name it “Count Padlet entries,” and paste the contents of [`bookmarklet.txt`](bookmarklet.txt) into its URL field.
 
-Unlike the extension, the bookmarklet must be clicked once after each full page load. It continues updating while that page remains open.
+Unlike the extension, the bookmarklet must be clicked once after each full page load. It continues updating while that page remains open. After updating this project, replace the bookmark with a fresh copy from the installer.
+
+Click a section's count to expand a segmented control of Padlet's post colours (white, red, yellow, green, blue, purple). Click it again to collapse back to the total.
 
 ## Development
 

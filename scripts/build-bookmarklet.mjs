@@ -28,7 +28,7 @@ const html = `<!doctype html>
     <h1>Padlet Section Counter</h1>
     <p>Drag this button to your bookmarks bar:</p>
     <p><a href="${escaped}">Count Padlet entries</a></p>
-    <p>Then open a Padlet in rows or columns mode and click the bookmark.</p>
+    <p>Then open a Padlet in rows or columns mode and click the bookmark. Click a count to expand the colour breakdown.</p>
     <p>If your bookmarks bar is hidden, show it with <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (Windows/Linux) or <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (Mac).</p>
   </main>
 </body>
