@@ -5,11 +5,12 @@ import { parseHTML } from "linkedom";
 
 const source = await readFile(new URL("../src/counter.js", import.meta.url), "utf8");
 
-function load(html, code = source) {
+function load(html, code = source, setup) {
   const { window } = parseHTML(`<html><head></head><body>${html}</body></html>`);
   globalThis.window = window;
   globalThis.document = window.document;
   globalThis.MutationObserver = window.MutationObserver;
+  setup?.(window);
   eval(code);
   return window;
 }
@@ -236,4 +237,99 @@ test("explicit white wins over nested colour markup and dark surfaces stay defau
     { default: "2", red: "0", orange: "0", green: "0", blue: "0", purple: "0" }
   );
   window.__padletSectionCounter.destroy();
+});
+
+test("counts lazy post wrappers that have not rendered a card yet", () => {
+  const window = load(`
+    <section data-testid="row"><header>Presenting</header>
+      <div data-testid="postWrapper" data-id="1"><article data-testid="surfacePost"></article></div>
+      <div data-testid="postWrapper" data-id="2"></div>
+    </section>
+  `);
+  assert.deepEqual(counts(window), ["2"]);
+  window.__padletSectionCounter.destroy();
+});
+
+test("reads colour from a nested wish and Padlet background classes", () => {
+  const window = load(`
+    <section data-testid="row"><header>Mixed</header>
+      <div data-testid="postWrapper" data-id="1"><div class="surface-post wish" data-color="orange"></div></div>
+      <div data-testid="postWrapper" data-id="2"><article data-testid="surfacePost" class="bg-park-200"></article></div>
+      <div data-testid="postWrapper" data-id="3"><article data-testid="surfacePost" style="background-color: rgb(181, 255, 184)"></article></div>
+    </section>
+  `);
+  const badge = window.document.querySelector(".padlet-section-counter-badge");
+  click(window, badge);
+  assert.deepEqual(
+    Object.fromEntries(segments(window).map((segment) => [segment.colour, segment.count])),
+    { default: "0", red: "0", orange: "1", green: "2", blue: "0", purple: "0" }
+  );
+  window.__padletSectionCounter.destroy();
+});
+
+test("uses Padlet wish data so unloaded posts keep their colours", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      data: [
+        { id: 1, attributes: { color: "red", wall_section_id: 10 } },
+        { id: 2, attributes: { color: "green", wall_section_id: 10 } },
+        { id: 3, attributes: { color: null, wall_section_id: 10 } }
+      ],
+      meta: {}
+    })
+  });
+
+  try {
+    const window = load(`
+      <!-- wall_hashid=board_TestHash1 -->
+      <section class="surface-section" data-id="10" id="section-10">
+        <div data-testid="sectionTitle"><h2>Announcements</h2></div>
+        <div data-testid="postWrapper" data-id="1"></div>
+      </section>
+    `);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const badge = window.document.querySelector(".padlet-section-counter-badge");
+    assert.equal(badge.textContent, "1");
+    click(window, badge);
+    assert.equal(segments(window).find((segment) => segment.colour === "red")?.count, "1");
+    window.__padletSectionCounter.destroy();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("fills a section from wish data when no posts are in the DOM", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      data: [
+        { id: 8, attributes: { color: "blue", wall_section_id: 22 } },
+        { id: 9, attributes: { color: "purple", wall_section_id: 22 } }
+      ],
+      meta: {}
+    })
+  });
+
+  try {
+    const window = load(`
+      <!-- wall_hashid=board_TestHash2 -->
+      <section class="surface-section" data-id="22" id="section-22">
+        <div data-testid="sectionTitle"><h2>Introductions</h2></div>
+      </section>
+    `);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const badge = window.document.querySelector(".padlet-section-counter-badge");
+    assert.equal(badge.textContent, "2");
+    click(window, badge);
+    assert.deepEqual(
+      Object.fromEntries(segments(window).map((segment) => [segment.colour, segment.count])),
+      { default: "0", red: "0", orange: "0", green: "0", blue: "1", purple: "1" }
+    );
+    window.__padletSectionCounter.destroy();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

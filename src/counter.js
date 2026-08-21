@@ -6,13 +6,21 @@
   const SEGMENT_CLASS = "padlet-section-counter-segment";
   const STYLE_ID = "padlet-section-counter-styles";
   const COLOURS = [
-    { id: "default", label: "White", bg: "#fff", samples: [[255, 255, 255], [17, 17, 17]] },
-    { id: "red", label: "Red", bg: "#ffd9da", samples: [[255, 217, 218], [124, 0, 0]] },
-    { id: "orange", label: "Yellow", bg: "#fff4ce", samples: [[255, 244, 206], [145, 61, 0]] },
-    { id: "green", label: "Green", bg: "#ddffde", samples: [[221, 255, 222], [1, 61, 0]] },
-    { id: "blue", label: "Blue", bg: "#bbeafe", samples: [[187, 234, 254], [1, 50, 108]] },
-    { id: "purple", label: "Purple", bg: "#eed8ff", samples: [[238, 216, 255], [61, 0, 98]] }
+    { id: "default", label: "White", bg: "#fff", samples: [[255, 255, 255], [245, 246, 247], [17, 17, 17]] },
+    { id: "red", label: "Red", bg: "#ffd9da", samples: [[255, 217, 218], [255, 198, 203], [124, 0, 0]] },
+    { id: "orange", label: "Yellow", bg: "#fff4ce", samples: [[255, 244, 206], [255, 235, 164], [145, 61, 0]] },
+    { id: "green", label: "Green", bg: "#ddffde", samples: [[221, 255, 222], [181, 255, 184], [1, 61, 0]] },
+    { id: "blue", label: "Blue", bg: "#bbeafe", samples: [[187, 234, 254], [154, 221, 251], [1, 50, 108]] },
+    { id: "purple", label: "Purple", bg: "#eed8ff", samples: [[238, 216, 255], [231, 191, 255], [61, 0, 98]] }
   ];
+  const BG_CLASS = {
+    park: "green",
+    oceanic: "blue",
+    grape: "purple",
+    scarlet: "red",
+    canary: "orange",
+    "light-ui": "default"
+  };
   const ALIAS = {
     default: "default",
     white: "default",
@@ -50,7 +58,10 @@
     "[data-column-id]",
     "[data-column-uid]"
   ].join(",");
+  const WRAPPER_SELECTOR =
+    '[data-testid="postWrapper"][data-id], [data-testid="postWrapper"][data-restored-post-id]';
   const POST_SELECTOR = [
+    WRAPPER_SELECTOR,
     '[data-testid="postWrapper"]',
     '[data-testid="surfacePost"]',
     '[data-testid="post"]',
@@ -138,11 +149,21 @@
   }
 
   function allPosts(root = document) {
-    return [...new Set(root.querySelectorAll(POST_SELECTOR))].filter(
+    const wrappers = [...root.querySelectorAll(WRAPPER_SELECTOR)];
+    const nodes = wrappers.length ? wrappers : [...root.querySelectorAll(POST_SELECTOR)];
+    return [...new Set(nodes)].filter(
       (post) =>
         !post.parentElement?.closest(POST_SELECTOR) &&
         !post.closest("[role=dialog], [contenteditable=true]")
     );
+  }
+
+  function postId(post) {
+    return post.getAttribute("data-id") || post.getAttribute("data-restored-post-id") || "";
+  }
+
+  function sectionDataId(section) {
+    return section.getAttribute("data-id") || String(section.id || "").replace(/^section-/, "");
   }
 
   function externalHeader(container) {
@@ -228,6 +249,7 @@
     let best = "default";
     let bestDist = MAX_SAMPLE_DISTANCE;
     for (const colour of COLOURS) {
+      if (colour.id === "default") continue;
       for (const [sr, sg, sb] of colour.samples) {
         const dist = Math.hypot(r - sr, g - sg, b - sb);
         if (dist < bestDist) {
@@ -244,6 +266,8 @@
     for (const token of String(className).split(/\s+/)) {
       const exact = token.toLowerCase();
       if (ALIAS[exact]) return ALIAS[exact];
+      const bg = exact.match(/^bg-(park|oceanic|grape|scarlet|canary|light-ui)-/);
+      if (bg) return BG_CLASS[bg[1]];
       const prefixed = exact.match(
         /^(?:wish|post|pdlt|color|colour)[-_]?(red|orange|yellow|green|blue|purple|white|black)$/
       );
@@ -281,29 +305,100 @@
     return bg ? nearestColour(bg) : null;
   }
 
+  function wishCard(post) {
+    return (
+      post.querySelector(".surface-post.wish, .wish.wish-v2, [id^='wish-']:not(#wish-list)") ||
+      (post.matches?.(".surface-post.wish, .wish.wish-v2") ? post : null)
+    );
+  }
+
   function postCard(post) {
     return (
       post.querySelector('[data-testid="surfacePost"], [data-testid="post"], article') || post
     );
   }
 
-  function postColour(post) {
+  function postColour(post, wishIndex) {
+    const id = postId(post);
+    const fromIndex = id && wishIndex?.get(id);
+    if (fromIndex) return fromIndex.colour;
+
+    const wish = wishCard(post);
     const card = postCard(post);
-    for (const el of [post, card]) {
+    for (const el of [post, wish, card]) {
       const named = colourFromAttributes(el);
       if (named) return named;
     }
-    for (const el of [post, card]) {
-      const fromClass = colourFromClass(el.className);
+    for (const el of [post, wish, card]) {
+      const fromClass = colourFromClass(el?.className);
       if (fromClass) return fromClass;
     }
-    return colourFromStyle(card) || colourFromStyle(post) || "default";
+    return colourFromStyle(card) || colourFromStyle(wish) || colourFromStyle(post) || "default";
   }
 
-  function colourCounts(posts) {
-    const counts = Object.fromEntries(COLOUR_IDS.map((id) => [id, 0]));
-    for (const post of posts) counts[postColour(post)] += 1;
-    return counts;
+  function emptyCounts() {
+    return Object.fromEntries(COLOUR_IDS.map((id) => [id, 0]));
+  }
+
+  function sectionTally(section, posts, sections, wishIndex) {
+    const nodes = sectionPosts(section, posts, sections);
+    const counts = emptyCounts();
+    const seen = new Set();
+
+    for (const post of nodes) {
+      const id = postId(post);
+      if (id) seen.add(id);
+      else seen.add(post);
+      counts[postColour(post, wishIndex)] += 1;
+    }
+
+    const sid = sectionDataId(section);
+    if (wishIndex && sid && nodes.length === 0) {
+      for (const [id, wish] of wishIndex) {
+        if (wish.sectionId !== sid || seen.has(id)) continue;
+        seen.add(id);
+        counts[wish.colour] += 1;
+      }
+    }
+
+    return { total: seen.size, counts };
+  }
+
+  function boardHashid() {
+    try {
+      for (const entry of performance.getEntriesByType?.("resource") || []) {
+        const id = new URL(entry.name, document.baseURI).searchParams.get("wall_hashid");
+        if (id) return id;
+      }
+    } catch {
+      // Ignore malformed performance entries.
+    }
+    const html = document.documentElement?.innerHTML || "";
+    return html.match(/wall_hashid(?:=|%3D|["':])(?:["']|%22)?(board_[A-Za-z0-9]+)/)?.[1] || "";
+  }
+
+  async function loadWishIndex(hashid) {
+    const index = new Map();
+    let pageStart = "";
+    for (let page = 0; page < 30; page += 1) {
+      const url = `/api/10/wishes?wall_hashid=${encodeURIComponent(hashid)}&page_start=${encodeURIComponent(pageStart)}`;
+      const response = await fetch(url, { credentials: "same-origin" });
+      if (!response.ok) break;
+      const json = await response.json();
+      for (const wish of json.data || []) {
+        const id = String(wish.id ?? wish.attributes?.id ?? "");
+        const sectionId = String(wish.attributes?.wall_section_id ?? "");
+        if (!id || !sectionId) continue;
+        index.set(id, {
+          sectionId,
+          colour: namedColour(wish.attributes?.color) || "default"
+        });
+      }
+      const next = json.meta?.next;
+      if (!next) break;
+      pageStart = next;
+    }
+    return index;
   }
 
   function describe(count, counts, expanded) {
@@ -351,7 +446,7 @@
     badge.replaceChildren(frag);
   }
 
-  function putBadge(section, posts, expanded) {
+  function putBadge(section, posts, sections, expanded, wishIndex) {
     const target = externalHeader(section);
     if (!target || target.closest(POST_SELECTOR)) return null;
 
@@ -362,7 +457,8 @@
       target.append(badge);
     }
 
-    renderBadge(badge, posts.length, colourCounts(posts), expanded);
+    const tally = sectionTally(section, posts, sections, wishIndex);
+    renderBadge(badge, tally.total, tally.counts, expanded);
     return badge;
   }
 
@@ -379,6 +475,8 @@
   function createCounter() {
     let timer;
     let observer;
+    let destroyed = false;
+    let wishIndex = null;
     const expandedSections = new WeakSet();
     const badgeSections = new WeakMap();
 
@@ -394,8 +492,10 @@
       for (const section of sections) {
         const badge = putBadge(
           section,
-          sectionPosts(section, posts, sections),
-          expandedSections.has(section)
+          posts,
+          sections,
+          expandedSections.has(section),
+          wishIndex
         );
         if (!badge) continue;
         badgeSections.set(badge, section);
@@ -455,9 +555,21 @@
     document.addEventListener("click", onBadgeClick, true);
     refresh();
 
+    const hashid = boardHashid();
+    if (hashid && typeof fetch === "function") {
+      loadWishIndex(hashid)
+        .then((index) => {
+          if (destroyed) return;
+          wishIndex = index;
+          refresh();
+        })
+        .catch(() => {});
+    }
+
     return {
       refresh,
       destroy() {
+        destroyed = true;
         clearTimeout(timer);
         observer.disconnect();
         document.removeEventListener("pointerdown", onBadgePointer, true);
