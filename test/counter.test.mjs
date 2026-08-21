@@ -101,6 +101,14 @@ test("shows a board badge when no sections are detected", () => {
   window.__padletSectionCounter.destroy();
 });
 
+test("does not show a board badge when no posts are identifiable", () => {
+  const window = load("<div>Unsupported Padlet structure</div>");
+
+  assert.equal(window.document.querySelector('[data-scope="board"]'), null);
+  assert.deepEqual(counts(window), []);
+  window.__padletSectionCounter.destroy();
+});
+
 test("does not show a board badge when sections exist", () => {
   const window = load(`
     <section data-testid="column"><header>Ideas</header>

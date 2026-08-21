@@ -34,7 +34,7 @@ const html = `<!doctype html>
 <body>
   <main>
     <h1>Padlet Section Counter</h1>
-    <p>Adds a live entry count to every row or column header on a Padlet, or a whole-board total on layouts without section headers. Click a count to expand how many posts are white, red, yellow, green, blue, and purple.</p>
+    <p>Adds a live entry count to every row or column header on a Padlet, or a whole-board total on layouts without section headers when their posts can be identified. Click a count to expand how many posts are white, red, yellow, green, blue, and purple.</p>
     <p class="install">Drag this button to your bookmarks bar:</p>
     <p class="install"><a class="bookmarklet" href="${escaped}">Count Padlet entries</a></p>
     <ol>

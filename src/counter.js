@@ -163,7 +163,8 @@
   }
 
   function allPosts(root = document) {
-    const nodes = [...root.querySelectorAll(POST_SELECTOR)];
+    const wrappers = [...root.querySelectorAll(WRAPPER_SELECTOR)];
+    const nodes = wrappers.length ? wrappers : [...root.querySelectorAll(POST_SELECTOR)];
     return [...new Set(nodes)].filter(
       (post) =>
         !post.parentElement?.closest(POST_SELECTOR) &&
@@ -511,8 +512,9 @@
   }
 
   function putBoardBadge(posts, expanded, wishIndex) {
-    const badge = ensureBadge(document.body, "board");
     const tally = boardTally(posts, wishIndex);
+    if (!tally.total) return null;
+    const badge = ensureBadge(document.body, "board");
     renderBadge(badge, tally.total, tally.counts, expanded, "Whole-board total");
     return badge;
   }
@@ -533,7 +535,7 @@
     let destroyed = false;
     let wishIndex = null;
     const boardScope = {};
-    const expandedScopes = new Set();
+    const expandedScopes = new WeakSet();
     const badgeSections = new WeakMap();
 
     function refresh() {
@@ -547,8 +549,10 @@
       const activeBadges = new Set();
       if (sections.length === 0) {
         const badge = putBoardBadge(posts, expandedScopes.has(boardScope), wishIndex);
-        badgeSections.set(badge, boardScope);
-        activeBadges.add(badge);
+        if (badge) {
+          badgeSections.set(badge, boardScope);
+          activeBadges.add(badge);
+        }
       } else {
         for (const section of sections) {
           const badge = putBadge(
