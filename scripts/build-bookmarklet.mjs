@@ -41,7 +41,7 @@ const html = `<!doctype html>
       <li>Show the bookmarks bar with <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (Windows/Linux) or <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (Mac).</li>
       <li>Drag <strong>Count Padlet entries</strong> onto the bar. If you already have that bookmark, delete it first and drag a fresh copy — an old bookmark will not pick up this update.</li>
       <li>Open a Padlet in <strong>Rows</strong> or <strong>Columns</strong> and click the bookmark once after the page loads.</li>
-      <li>Click a section’s number to expand the colour breakdown. Click it again to collapse back to the total.</li>
+      <li>Click a section’s number to expand the colour breakdown. Click it again to collapse back to the total. Counts include posts that have not been scrolled into view yet.</li>
     </ol>
     <p>If dragging is unavailable, create a bookmark named “Count Padlet entries” and paste the contents of <a href="bookmarklet.txt">bookmarklet.txt</a> into its URL field.</p>
     <p class="note">The bookmarklet must be clicked again after each full page load. Counts keep updating while that page stays open.</p>

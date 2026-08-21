@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Padlet Section Counter",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Shows a live entry count on every section in Padlet's rows and columns layouts, with a click-to-expand colour breakdown.",
   "content_scripts": [
     {
