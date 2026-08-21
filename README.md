@@ -1,6 +1,6 @@
 # Padlet Section Counter
 
-Adds a live entry count to every section header in Padlet's **Rows** and **Columns** layouts. Counts update automatically when posts are added, moved, or removed. Click a count to expand it into a segmented breakdown of each post colour.
+Adds a live entry count to every section header in Padlet's **Rows** and **Columns** layouts. Layouts without section headers, such as **Wall**, show a whole-board total instead. Counts update automatically when posts are added, moved, or removed. Click a count to expand it into a segmented breakdown of each post colour.
 
 No account access, API key, network request, or collected data is required.
 
@@ -10,7 +10,7 @@ No account access, API key, network request, or collected data is required.
 2. Open `chrome://extensions` in Chrome.
 3. Turn on **Developer mode**.
 4. Click **Load unpacked** and select this repository's folder.
-5. Open or refresh a Padlet using Rows or Columns.
+5. Open or refresh a Padlet.
 
 The extension also works in Chromium browsers such as Edge, Brave, and Arc via their extensions page.
 
@@ -18,8 +18,8 @@ The extension also works in Chromium browsers such as Edge, Brave, and Arc via t
 
 1. Open [padlet-counter.tk.sg](https://padlet-counter.tk.sg) in Chrome (or open [`install-bookmarklet.html`](install-bookmarklet.html) locally).
 2. Show the bookmarks bar if it is hidden, then drag **Count Padlet entries** onto it. If you already have that bookmark, delete it first and drag a fresh copy — an old bookmark will not pick up this update.
-3. Open a Padlet using Rows or Columns and click the bookmark once after the page loads.
-4. Click a section’s number to expand the colour breakdown (white, red, yellow, green, blue, purple). Click it again to collapse.
+3. Open a Padlet and click the bookmark once after the page loads.
+4. Click a section’s number, or the whole-board total on layouts without sections, to expand the colour breakdown (white, red, yellow, green, blue, purple). Click it again to collapse.
 
 If dragging is unavailable, create a bookmark manually, name it “Count Padlet entries,” and paste the contents of [`bookmarklet.txt`](bookmarklet.txt) into its URL field.
 
@@ -42,4 +42,4 @@ The installer is served by an unprivileged nginx container behind the shared `de
 REF=main ./deploy.sh
 ```
 
-Padlet is a third-party service and can change its page structure. The counter first uses stable accessibility/data attributes and then a conservative structural fallback; unsupported layouts are left unchanged rather than showing a misleading count.
+Padlet is a third-party service and can change its page structure. The counter first uses stable accessibility/data attributes and then a conservative structural fallback. Layouts without section headers show a board-level total when their posts can be identified; unsupported page structures are left unchanged rather than showing a misleading count.

@@ -77,6 +77,42 @@ test("falls back to section structure when Padlet data attributes change", () =>
   window.__padletSectionCounter.destroy();
 });
 
+test("shows a board badge when no sections are detected", () => {
+  const window = load(`
+    <div class="board">
+      <div data-testid="postWrapper"><article data-testid="surfacePost"></article></div>
+      <div data-testid="postWrapper"><article data-testid="surfacePost" data-color="red"></article></div>
+      <div data-testid="postWrapper"><article data-testid="surfacePost" data-color="green"></article></div>
+    </div>
+  `);
+  const badge = window.document.querySelector('[data-scope="board"]');
+
+  assert.equal(window.document.querySelectorAll(".padlet-section-counter-badge").length, 1);
+  assert.equal(badge.textContent, "3");
+  assert.match(badge.getAttribute("aria-label"), /^Whole-board total: 3 entries/i);
+
+  click(window, badge);
+
+  assert.deepEqual(
+    Object.fromEntries(segments(window).map((segment) => [segment.colour, segment.count])),
+    { default: "1", red: "1", orange: "0", green: "1", blue: "0", purple: "0" }
+  );
+  assert.equal(badge.getAttribute("aria-expanded"), "true");
+  window.__padletSectionCounter.destroy();
+});
+
+test("does not show a board badge when sections exist", () => {
+  const window = load(`
+    <section data-testid="column"><header>Ideas</header>
+      <article data-testid="post"></article>
+    </section>
+  `);
+
+  assert.equal(window.document.querySelector('[data-scope="board"]'), null);
+  assert.deepEqual(counts(window), ["1"]);
+  window.__padletSectionCounter.destroy();
+});
+
 test("updates after posts are added", async () => {
   const window = load(`
     <section data-testid="row"><header>Queue</header><div class="posts"></div></section>
@@ -100,6 +136,43 @@ test("generated bookmarklet is executable and self-contained", async () => {
   );
   assert.deepEqual(counts(window), ["0"]);
   window.__padletSectionCounter.destroy();
+});
+
+test("unions wall wishes with DOM posts and deduplicates wish ids", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      data: [
+        { id: 101, attributes: { color: "red", wall_section_id: 384164513 } },
+        { id: 202, attributes: { color: "blue", wall_section_id: 384164513 } }
+      ],
+      meta: {}
+    })
+  });
+
+  try {
+    const window = load(`
+      <!-- wall_hashid=board_WallHash1 -->
+      <div class="board">
+        <div data-testid="postWrapper" id="wish-101">
+          <article data-testid="surfacePost" data-color="green"></article>
+        </div>
+      </div>
+    `);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const badge = window.document.querySelector('[data-scope="board"]');
+
+    assert.equal(badge.textContent, "2");
+    click(window, badge);
+    assert.deepEqual(
+      Object.fromEntries(segments(window).map((segment) => [segment.colour, segment.count])),
+      { default: "0", red: "1", orange: "0", green: "0", blue: "1", purple: "0" }
+    );
+    window.__padletSectionCounter.destroy();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("replaces a counter left behind by an older bookmarklet", () => {

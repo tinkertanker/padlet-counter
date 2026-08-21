@@ -34,14 +34,14 @@ const html = `<!doctype html>
 <body>
   <main>
     <h1>Padlet Section Counter</h1>
-    <p>Adds a live entry count to every row or column header on a Padlet. Click a count to expand how many posts are white, red, yellow, green, blue, and purple.</p>
+    <p>Adds a live entry count to every row or column header on a Padlet, or a whole-board total on layouts without section headers. Click a count to expand how many posts are white, red, yellow, green, blue, and purple.</p>
     <p class="install">Drag this button to your bookmarks bar:</p>
     <p class="install"><a class="bookmarklet" href="${escaped}">Count Padlet entries</a></p>
     <ol>
       <li>Show the bookmarks bar with <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (Windows/Linux) or <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> (Mac).</li>
       <li>Drag <strong>Count Padlet entries</strong> onto the bar. If you already have that bookmark, delete it first and drag a fresh copy — an old bookmark will not pick up this update.</li>
-      <li>Open a Padlet in <strong>Rows</strong> or <strong>Columns</strong> and click the bookmark once after the page loads.</li>
-      <li>Click a section’s number to expand the colour breakdown. Click it again to collapse back to the total. Counts include posts that have not been scrolled into view yet.</li>
+      <li>Open a Padlet and click the bookmark once after the page loads.</li>
+      <li>Click a section’s number, or the whole-board total on layouts without sections, to expand the colour breakdown. Click it again to collapse back to the total. Counts include posts that have not been scrolled into view yet.</li>
     </ol>
     <p>If dragging is unavailable, create a bookmark named “Count Padlet entries” and paste the contents of <a href="bookmarklet.txt">bookmarklet.txt</a> into its URL field.</p>
     <p class="note">The bookmarklet must be clicked again after each full page load. Counts keep updating while that page stays open.</p>
