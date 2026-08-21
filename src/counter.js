@@ -127,6 +127,20 @@
         color: #111827 !important;
         padding: 0 !important;
       }
+      .${BADGE_CLASS}[data-scope="board"] {
+        bottom: 16px !important;
+        font-size: 14px !important;
+        height: 28px !important;
+        left: 16px !important;
+        margin: 0 !important;
+        min-width: 28px !important;
+        position: fixed !important;
+        z-index: 2147483647 !important;
+      }
+      .${BADGE_CLASS}[data-scope="board"][aria-expanded="true"] .${SEGMENT_CLASS} {
+        height: 28px !important;
+        min-width: 28px !important;
+      }
       .${SEGMENT_CLASS} {
         align-items: center !important;
         box-sizing: border-box !important;
@@ -159,7 +173,12 @@
   }
 
   function postId(post) {
-    return post.getAttribute("data-id") || post.getAttribute("data-restored-post-id") || "";
+    return (
+      post.getAttribute("data-id") ||
+      post.getAttribute("data-restored-post-id") ||
+      post.getAttribute("id")?.match(/^wish-(\d+)$/)?.[1] ||
+      ""
+    );
   }
 
   function sectionDataId(section) {
@@ -364,6 +383,29 @@
     return { total: seen.size, counts };
   }
 
+  function boardTally(posts, wishIndex) {
+    const counts = emptyCounts();
+    const seen = new Set();
+
+    for (const post of posts) {
+      const id = postId(post);
+      const key = id || post;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      counts[postColour(post, wishIndex)] += 1;
+    }
+
+    if (wishIndex) {
+      for (const [id, wish] of wishIndex) {
+        if (seen.has(id)) continue;
+        seen.add(id);
+        counts[wish.colour] += 1;
+      }
+    }
+
+    return { total: seen.size, counts };
+  }
+
   function boardHashid() {
     try {
       for (const entry of performance.getEntriesByType?.("resource") || []) {
@@ -414,8 +456,21 @@
     return [...header.children].find((child) => child.classList?.contains(BADGE_CLASS));
   }
 
-  function renderBadge(badge, count, counts, expanded) {
-    const label = describe(count, counts, expanded);
+  function ensureBadge(target, scope) {
+    let badge = findBadge(target);
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = BADGE_CLASS;
+      target.append(badge);
+    }
+    if (scope) badge.dataset.scope = scope;
+    return badge;
+  }
+
+  function renderBadge(badge, count, counts, expanded, context = "") {
+    const label = context
+      ? `${context}: ${describe(count, counts, expanded)}`
+      : describe(count, counts, expanded);
     badge.setAttribute("aria-expanded", expanded ? "true" : "false");
     badge.setAttribute("aria-live", expanded ? "off" : "polite");
     badge.setAttribute("aria-label", label);
@@ -450,15 +505,17 @@
     const target = externalHeader(section);
     if (!target || target.closest(POST_SELECTOR)) return null;
 
-    let badge = findBadge(target);
-    if (!badge) {
-      badge = document.createElement("span");
-      badge.className = BADGE_CLASS;
-      target.append(badge);
-    }
-
+    const badge = ensureBadge(target);
     const tally = sectionTally(section, posts, sections, wishIndex);
     renderBadge(badge, tally.total, tally.counts, expanded);
+    return badge;
+  }
+
+  function putBoardBadge(posts, expanded, wishIndex) {
+    const tally = boardTally(posts, wishIndex);
+    if (!tally.total) return null;
+    const badge = ensureBadge(document.body, "board");
+    renderBadge(badge, tally.total, tally.counts, expanded, "Whole-board total");
     return badge;
   }
 
@@ -477,7 +534,8 @@
     let observer;
     let destroyed = false;
     let wishIndex = null;
-    const expandedSections = new WeakSet();
+    const boardScope = {};
+    const expandedScopes = new WeakSet();
     const badgeSections = new WeakMap();
 
     function refresh() {
@@ -489,17 +547,25 @@
       if (sections.length === 0) sections = inferredSections(posts);
 
       const activeBadges = new Set();
-      for (const section of sections) {
-        const badge = putBadge(
-          section,
-          posts,
-          sections,
-          expandedSections.has(section),
-          wishIndex
-        );
-        if (!badge) continue;
-        badgeSections.set(badge, section);
-        activeBadges.add(badge);
+      if (sections.length === 0) {
+        const badge = putBoardBadge(posts, expandedScopes.has(boardScope), wishIndex);
+        if (badge) {
+          badgeSections.set(badge, boardScope);
+          activeBadges.add(badge);
+        }
+      } else {
+        for (const section of sections) {
+          const badge = putBadge(
+            section,
+            posts,
+            sections,
+            expandedScopes.has(section),
+            wishIndex
+          );
+          if (!badge) continue;
+          badgeSections.set(badge, section);
+          activeBadges.add(badge);
+        }
       }
 
       document.querySelectorAll(`.${BADGE_CLASS}`).forEach((badge) => {
@@ -513,10 +579,10 @@
     }
 
     function toggleBadge(badge) {
-      const section = badgeSections.get(badge);
-      if (!section) return;
-      if (expandedSections.has(section)) expandedSections.delete(section);
-      else expandedSections.add(section);
+      const scope = badgeSections.get(badge);
+      if (!scope) return;
+      if (expandedScopes.has(scope)) expandedScopes.delete(scope);
+      else expandedScopes.add(scope);
       refresh();
     }
 
