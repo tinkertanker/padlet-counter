@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-bookmarklet.mjs",
+    "build:cloudflare": "node scripts/build-cloudflare.mjs",
+    "deploy": "wrangler deploy",
     "check": "node --check src/counter.js && node --check scripts/build-bookmarklet.mjs && node scripts/build-bookmarklet.mjs && node --test"
   },
   "devDependencies": {
-    "linkedom": "^0.18.13"
+    "linkedom": "^0.18.13",
+    "wrangler": "4.131.1"
   }
 }

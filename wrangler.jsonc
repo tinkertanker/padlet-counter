@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "padlet-counter",
+  "account_id": "b8b1032c61d9475cd00229c74db7ec72",
+  "compatibility_date": "2026-09-12",
+  "workers_dev": true,
+  "routes": [{ "pattern": "padlet-counter.tk.sg", "custom_domain": true }],
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+  "build": { "command": "npm run build:cloudflare" }
+}
