@@ -1,6 +1,6 @@
 # Padlet Section Counter
 
-Adds a live entry count to every section header in Padlet's **Rows** and **Columns** layouts. Layouts without section headers, such as **Wall**, show a whole-board total when their posts can be identified. Counts update automatically when posts are added, moved, or removed. Click a count to expand it into a segmented breakdown of each post colour.
+Adds a live entry count to every section header in Padlet's **Rows** and **Columns** layouts. Layouts without section headers, such as **Wall**, show a whole-board total when their posts can be identified. Counts update automatically when posts are added, moved, or removed. Click a count to expand it into a segmented breakdown of each post colour. Pinned posts are left out of the counts.
 
 No account access, API key, network request, or collected data is required.
 

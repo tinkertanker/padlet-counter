@@ -5,13 +5,16 @@
   const BADGE_CLASS = "padlet-section-counter-badge";
   const SEGMENT_CLASS = "padlet-section-counter-segment";
   const STYLE_ID = "padlet-section-counter-styles";
+  // `bg`/`fg` style the breakdown swatches: saturated colours that are easy to
+  // tell apart, each with text that meets WCAG AA contrast. `samples` are the
+  // colours Padlet actually renders and are only used to recognise posts.
   const COLOURS = [
-    { id: "default", label: "White", bg: "#fff", samples: [[255, 255, 255], [245, 246, 247], [17, 17, 17]] },
-    { id: "red", label: "Red", bg: "#ffd9da", samples: [[255, 217, 218], [255, 198, 203], [124, 0, 0]] },
-    { id: "orange", label: "Yellow", bg: "#fff4ce", samples: [[255, 244, 206], [255, 235, 164], [145, 61, 0]] },
-    { id: "green", label: "Green", bg: "#ddffde", samples: [[221, 255, 222], [181, 255, 184], [1, 61, 0]] },
-    { id: "blue", label: "Blue", bg: "#bbeafe", samples: [[187, 234, 254], [154, 221, 251], [1, 50, 108]] },
-    { id: "purple", label: "Purple", bg: "#eed8ff", samples: [[238, 216, 255], [231, 191, 255], [61, 0, 98]] }
+    { id: "default", label: "White", bg: "#fff", fg: "#111827", samples: [[255, 255, 255], [245, 246, 247], [17, 17, 17]] },
+    { id: "red", label: "Red", bg: "#c81e1e", fg: "#fff", samples: [[255, 217, 218], [255, 198, 203], [124, 0, 0]] },
+    { id: "orange", label: "Yellow", bg: "#facc15", fg: "#111827", samples: [[255, 244, 206], [255, 235, 164], [145, 61, 0]] },
+    { id: "green", label: "Green", bg: "#15803d", fg: "#fff", samples: [[221, 255, 222], [181, 255, 184], [1, 61, 0]] },
+    { id: "blue", label: "Blue", bg: "#1d4ed8", fg: "#fff", samples: [[187, 234, 254], [154, 221, 251], [1, 50, 108]] },
+    { id: "purple", label: "Purple", bg: "#7e22ce", fg: "#fff", samples: [[238, 216, 255], [231, 191, 255], [61, 0, 98]] }
   ];
   const BG_CLASS = {
     park: "green",
@@ -93,7 +96,7 @@
 
     const swatches = COLOURS.map(
       (colour) =>
-        `.${SEGMENT_CLASS}[data-colour="${colour.id}"] { background: ${colour.bg} !important; }`
+        `.${SEGMENT_CLASS}[data-colour="${colour.id}"] { background: ${colour.bg} !important; color: ${colour.fg} !important; }`
     ).join("");
     const style = document.createElement("style");
     style.id = STYLE_ID;
@@ -355,6 +358,39 @@
     return colourFromStyle(card) || colourFromStyle(wish) || colourFromStyle(post) || "default";
   }
 
+  // Pinned posts are usually instructions or examples, not entries, so they are
+  // left out of every count. Padlet's markup varies, so look for any of the
+  // ways a post can be flagged as pinned.
+  const PINNED_SELECTOR = [
+    '[data-pinned="true"]',
+    '[data-is-pinned="true"]',
+    ".pinned",
+    ".is-pinned",
+    ".wish-pinned",
+    ".post-pinned"
+  ].join(",");
+  const PINNED_TEXT = /\bpinned\b/i;
+
+  function hasPinnedMarker(el) {
+    if (!el?.getAttribute) return false;
+    if (el.matches?.(PINNED_SELECTOR)) return true;
+    for (const attr of ["data-testid", "aria-label", "title"]) {
+      if (PINNED_TEXT.test(el.getAttribute(attr) || "")) return true;
+    }
+    return false;
+  }
+
+  function isPinned(post, wishIndex) {
+    const id = postId(post);
+    if (id && wishIndex?.get(id)?.pinned) return true;
+    if (hasPinnedMarker(post)) return true;
+    return [...post.querySelectorAll("[class], [data-pinned], [data-is-pinned], [data-testid], [aria-label], [title]")].some(hasPinnedMarker);
+  }
+
+  function pinnedWish(attributes = {}) {
+    return Boolean(attributes.pinned_at || attributes.is_pinned || attributes.pinned === true);
+  }
+
   function emptyCounts() {
     return Object.fromEntries(COLOUR_IDS.map((id) => [id, 0]));
   }
@@ -363,12 +399,15 @@
     const nodes = sectionPosts(section, posts, sections);
     const counts = emptyCounts();
     const seen = new Set();
+    let total = 0;
 
     for (const post of nodes) {
-      const id = postId(post);
-      if (id) seen.add(id);
-      else seen.add(post);
+      const key = postId(post) || post;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (isPinned(post, wishIndex)) continue;
       counts[postColour(post, wishIndex)] += 1;
+      total += 1;
     }
 
     const sid = sectionDataId(section);
@@ -376,34 +415,40 @@
       for (const [id, wish] of wishIndex) {
         if (wish.sectionId !== sid || seen.has(id)) continue;
         seen.add(id);
+        if (wish.pinned) continue;
         counts[wish.colour] += 1;
+        total += 1;
       }
     }
 
-    return { total: seen.size, counts };
+    return { total, counts };
   }
 
   function boardTally(posts, wishIndex) {
     const counts = emptyCounts();
     const seen = new Set();
+    let total = 0;
 
     for (const post of posts) {
-      const id = postId(post);
-      const key = id || post;
+      const key = postId(post) || post;
       if (seen.has(key)) continue;
       seen.add(key);
+      if (isPinned(post, wishIndex)) continue;
       counts[postColour(post, wishIndex)] += 1;
+      total += 1;
     }
 
     if (wishIndex) {
       for (const [id, wish] of wishIndex) {
         if (seen.has(id)) continue;
         seen.add(id);
+        if (wish.pinned) continue;
         counts[wish.colour] += 1;
+        total += 1;
       }
     }
 
-    return { total: seen.size, counts };
+    return { total, counts };
   }
 
   function boardHashid() {
@@ -433,7 +478,8 @@
         if (!id || !sectionId) continue;
         index.set(id, {
           sectionId,
-          colour: namedColour(wish.attributes?.color) || "default"
+          colour: namedColour(wish.attributes?.color) || "default",
+          pinned: pinnedWish(wish.attributes)
         });
       }
       const next = json.meta?.next;
@@ -614,7 +660,7 @@
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["class", "style", "color", ...COLOUR_ATTRS]
+      attributeFilter: ["class", "style", "color", "data-pinned", "data-is-pinned", ...COLOUR_ATTRS]
     });
     document.addEventListener("pointerdown", onBadgePointer, true);
     document.addEventListener("mousedown", onBadgePointer, true);
