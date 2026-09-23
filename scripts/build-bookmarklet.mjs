@@ -14,7 +14,7 @@ const html = `<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Install Padlet Section Counter</title>
+  <title>Install Section Counter for Padlet</title>
   <style>
     :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
     body { display: grid; margin: 0; min-height: 100vh; place-items: center; }
@@ -33,7 +33,7 @@ const html = `<!doctype html>
 </head>
 <body>
   <main>
-    <h1>Padlet Section Counter</h1>
+    <h1>Section Counter for Padlet</h1>
     <p>Adds a live entry count to every row or column header on a Padlet, or a whole-board total on layouts without section headers when their posts can be identified. Click a count to expand how many posts are white, red, yellow, green, blue, and purple.</p>
     <p class="install">Drag this button to your bookmarks bar:</p>
     <p class="install"><a class="bookmarklet" href="${escaped}">Count Padlet entries</a></p>
@@ -45,6 +45,7 @@ const html = `<!doctype html>
     </ol>
     <p>If dragging is unavailable, create a bookmark named “Count Padlet entries” and paste the contents of <a href="bookmarklet.txt">bookmarklet.txt</a> into its URL field.</p>
     <p class="note">The bookmarklet must be clicked again after each full page load. Counts keep updating while that page stays open.</p>
+    <p class="note">No data is collected. See the <a href="https://padlet-counter.tk.sg/privacy">privacy policy</a>. Not affiliated with Padlet.</p>
   </main>
 </body>
 </html>

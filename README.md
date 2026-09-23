@@ -1,8 +1,10 @@
-# Padlet Section Counter
+# Section Counter for Padlet
 
 Adds a live entry count to every section header in Padlet's **Rows** and **Columns** layouts. Layouts without section headers, such as **Wall**, show a whole-board total when their posts can be identified. Counts update automatically when posts are added, moved, or removed. Click a count to expand it into a segmented breakdown of each post colour. Pinned posts are left out of the counts.
 
-No account access, API key, network request, or collected data is required.
+No data is collected or sent anywhere. To count posts that Padlet has not rendered yet, the counter requests the board's post list from Padlet itself, using the page's existing session; nothing leaves Padlet. See the [privacy policy](site/privacy.html), published at [padlet-counter.tk.sg/privacy](https://padlet-counter.tk.sg/privacy).
+
+Section Counter for Padlet is an independent tool and is not affiliated with Padlet.
 
 ## Install the Chrome extension
 
@@ -30,9 +32,15 @@ Unlike the extension, the bookmarklet must be clicked once after each full page 
 The extension and bookmarklet use the same dependency-free source in `src/counter.js`.
 
 ```sh
-npm run build  # regenerate bookmarklet.txt and install-bookmarklet.html
-npm run check  # syntax-check and regenerate derived files
+npm run build        # regenerate bookmarklet.txt and install-bookmarklet.html
+npm run build:icons  # regenerate icons/*.png from scripts/build-icons.mjs
+npm run check        # syntax-check and regenerate derived files
+npm run package      # zip the extension for the Chrome Web Store into build/
 ```
+
+## Chrome Web Store
+
+`npm run package` writes `build/section-counter-for-padlet-<version>.zip`, containing only the manifest, `src/counter.js` and the icons. Bump `version` in both `manifest.json` and `package.json` before each upload. Listing copy, privacy answers and promo artwork are in [`store/`](store/LISTING.md).
 
 ## Deployment
 
@@ -51,6 +59,6 @@ npx wrangler whoami  # confirm Tinkertanker before deploying
 npm run deploy
 ```
 
-Wrangler builds `dist/` using `scripts/build-cloudflare.mjs`. Only the installer, bookmarklet, health endpoint, and hosting rules are uploaded; extension source and development files are not public. `/` and `/install-bookmarklet.html` serve the same installer, `/healthz` returns `ok`, and unknown paths return 404. No runtime secrets, database, or Docker origin are required. Deployment is manual; no Git-triggered build has been configured.
+Wrangler builds `dist/` using `scripts/build-cloudflare.mjs`. Only the installer, bookmarklet, privacy policy (`site/privacy.html`, served at `/privacy`), health endpoint, and hosting rules are uploaded; extension source and development files are not public. `/` and `/install-bookmarklet.html` serve the same installer, `/healthz` returns `ok`, and unknown paths return 404. No runtime secrets, database, or Docker origin are required. Deployment is manual; no Git-triggered build has been configured.
 
 Padlet is a third-party service and can change its page structure. The counter first uses stable accessibility/data attributes and then a conservative structural fallback. Layouts without section headers show a board-level total when their posts can be identified; unsupported page structures are left unchanged rather than showing a misleading count.
