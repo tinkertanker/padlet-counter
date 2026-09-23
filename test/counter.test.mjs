@@ -414,3 +414,56 @@ test("fills a section from wish data when no posts are in the DOM", async () => 
     globalThis.fetch = originalFetch;
   }
 });
+
+test("leaves pinned posts out of counts and the colour breakdown", () => {
+  const window = load(`
+    <section data-testid="column"><header>Ideas</header>
+      <div data-testid="postWrapper" data-id="1"><article data-testid="surfacePost" data-color="red"><span aria-label="Pinned post"></span></article></div>
+      <div data-testid="postWrapper" data-id="2" data-pinned="true"><article data-testid="surfacePost" data-color="blue"></article></div>
+      <div data-testid="postWrapper" data-id="3"><article data-testid="surfacePost" data-color="green"></article></div>
+    </section>
+  `);
+  const badge = window.document.querySelector(".padlet-section-counter-badge");
+  assert.equal(badge.textContent, "1");
+  click(window, badge);
+  assert.deepEqual(
+    Object.fromEntries(segments(window).map((segment) => [segment.colour, segment.count])),
+    { default: "0", red: "0", orange: "0", green: "1", blue: "0", purple: "0" }
+  );
+  window.__padletSectionCounter.destroy();
+});
+
+test("leaves wishes pinned in Padlet data out of counts", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      data: [
+        { id: 31, attributes: { color: "red", wall_section_id: 5, pinned_at: "2026-09-01T00:00:00Z" } },
+        { id: 32, attributes: { color: "purple", wall_section_id: 5, pinned_at: null } },
+        { id: 33, attributes: { color: "blue", wall_section_id: 5 } }
+      ],
+      meta: {}
+    })
+  });
+
+  try {
+    const window = load(`
+      <!-- wall_hashid=board_PinHash1 -->
+      <div class="board">
+        <div data-testid="postWrapper" data-id="31"><article data-testid="surfacePost"></article></div>
+      </div>
+    `);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const badge = window.document.querySelector('[data-scope="board"]');
+    assert.equal(badge.textContent, "2");
+    click(window, badge);
+    assert.deepEqual(
+      Object.fromEntries(segments(window).map((segment) => [segment.colour, segment.count])),
+      { default: "0", red: "0", orange: "0", green: "0", blue: "1", purple: "1" }
+    );
+    window.__padletSectionCounter.destroy();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
