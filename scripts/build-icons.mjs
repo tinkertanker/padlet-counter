@@ -1,29 +1,15 @@
-// Draws the extension icons without image dependencies: a dark badge with a
-// tally mark and a segmented colour bar, matching the on-page counter.
+// Draws the extension icons without image dependencies: a dark circle with
+// a white "67", matching the on-page count badge.
 import { mkdir, writeFile } from "node:fs/promises";
 import { crc32, deflateSync } from "node:zlib";
 
 const BADGE = [17, 24, 39];
 const WHITE = [255, 255, 255];
-const BAR = [
-  [255, 255, 255],
-  [200, 30, 30],
-  [250, 204, 21],
-  [21, 128, 61],
-  [29, 78, 216],
-  [126, 34, 206]
-];
 
 // Chrome Web Store asks for 96px artwork inside a 128px icon; smaller sizes use
 // nearly the whole canvas so they stay legible.
 const SIZES = { 16: 0, 32: 1, 48: 2, 128: 16 };
 const SUPERSAMPLE = 8;
-
-function roundedRect(x, y, x0, y0, x1, y1, r) {
-  const dx = Math.max(x0 + r - x, 0, x - (x1 - r));
-  const dy = Math.max(y0 + r - y, 0, y - (y1 - r));
-  return Math.hypot(dx, dy) <= r && x >= x0 && x <= x1 && y >= y0 && y <= y1;
-}
 
 function capsule(x, y, ax, ay, bx, by, r) {
   const vx = bx - ax;
@@ -33,18 +19,18 @@ function capsule(x, y, ax, ay, bx, by, r) {
 }
 
 // Colour at a point in artwork space (0..1 on both axes), or null if outside.
+// Digits are single strokes with round caps: a "6" (loop plus rising stroke)
+// and a "7" (bar plus diagonal).
 function sample(x, y) {
-  if (!roundedRect(x, y, 0, 0, 1, 1, 0.22)) return null;
-  if (roundedRect(x, y, 0.16, 0.7, 0.84, 0.84, 0.07)) {
-    const segment = Math.min(BAR.length - 1, Math.floor(((x - 0.16) / 0.68) * BAR.length));
-    return BAR[segment];
-  }
-  const stroke = 0.05;
-  for (const tx of [0.28, 0.42, 0.56, 0.7]) {
-    if (capsule(x, y, tx, 0.18, tx, 0.56, stroke)) return WHITE;
-  }
-  if (capsule(x, y, 0.18, 0.5, 0.8, 0.24, stroke)) return WHITE;
-  return BADGE;
+  if (Math.hypot(x - 0.5, y - 0.5) > 0.5) return null;
+  const stroke = 0.055;
+  const six =
+    Math.abs(Math.hypot(x - 0.35, y - 0.595) - 0.125) <= stroke ||
+    capsule(x, y, 0.235, 0.55, 0.39, 0.28, stroke);
+  const seven =
+    capsule(x, y, 0.53, 0.28, 0.755, 0.28, stroke) ||
+    capsule(x, y, 0.755, 0.28, 0.6, 0.72, stroke);
+  return six || seven ? WHITE : BADGE;
 }
 
 function render(size, padding) {
