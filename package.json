@@ -1,13 +1,15 @@
 {
   "name": "padlet-section-counter",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node scripts/build-bookmarklet.mjs",
+    "build:icons": "node scripts/build-icons.mjs",
     "build:cloudflare": "node scripts/build-cloudflare.mjs",
+    "package": "node scripts/package-extension.mjs",
     "deploy": "wrangler deploy",
-    "check": "node --check src/counter.js && node --check scripts/build-bookmarklet.mjs && node scripts/build-bookmarklet.mjs && node --test"
+    "check": "node --check src/counter.js && node --check scripts/build-bookmarklet.mjs && node --check scripts/build-icons.mjs && node --check scripts/package-extension.mjs && node scripts/build-bookmarklet.mjs && node --test"
   },
   "devDependencies": {
     "linkedom": "^0.18.13",

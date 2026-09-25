@@ -8,11 +8,12 @@ for (const [source, target] of [
   ["install-bookmarklet.html", "index.html"],
   ["install-bookmarklet.html", "install-bookmarklet.html"],
   ["bookmarklet.txt", "bookmarklet.txt"],
+  ["site/privacy.html", "privacy.html"],
 ]) {
   await copyFile(new URL(`../${source}`, import.meta.url), new URL(target, dist));
 }
 await writeFile(new URL("healthz", dist), "ok\n");
-await writeFile(new URL("_redirects", dist), "/ /index.html 200\n");
+await writeFile(new URL("_redirects", dist), "/ /index.html 200\n/privacy /privacy.html 200\n");
 await writeFile(new URL("_headers", dist), `/*
   Cache-Control: no-cache, must-revalidate
   X-Content-Type-Options: nosniff
